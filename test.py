@@ -4,7 +4,7 @@ from filecmp import cmp
 
 import time
 
-filename = "text.txt"
+filename = "hamlet.txt"
 
 start_time = time.time()
 

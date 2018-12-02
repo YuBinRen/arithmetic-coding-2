@@ -3,7 +3,9 @@ from sys import stdout as so
 from bisect import bisect
 import itertools
 
-kappa = 3
+kappa = 5
+
+scaling = 128
 
 
 def encode(x):
@@ -52,17 +54,13 @@ def encode(x):
 
         p = update_prob(frequencies, a)
 
+        f = update_culm_prob_enc(p)
+
         # debugging
         # if k <= 5:
-        # 	summation = sum(p.values())
-        # 	print(summation)
-        # 	print(p)
-
-        f = update_culm_prob_enc(p)
-        #print(p)
-
-        # if f[-1] > 1:
-        #     raise ValueError('The probablities don't add up to 1!'')
+        #   summation = sum(p.values())
+        #   print(summation)
+        #   print(p)
 
         lohi_range = hi-lo + 1
         
@@ -123,10 +121,10 @@ def encode(x):
         #This should be the last step, where the context frequency distribution should be calculated
         frequencies = update_freq(a, frequencies)
 
-        #debugging
-        if k <= 10:
-            print(x[k])
-            print(frequencies)
+        # #debugging
+        # if k <= 10:
+        #     print(x[k])
+        #     print(frequencies)
 
     # termination bits
     # after processing all input symbols, flush any bits still in the 'straddle' pipeline
@@ -182,7 +180,10 @@ def decode(y):
         #print(f)
         lohi_range = hi - lo + 1
 
-        a.insert(0, bisect(f, (value-lo)/lohi_range)-1)
+        decoded_symbol = bisect(f, (value-lo)/lohi_range)-1
+
+        a.insert(0, decoded_symbol)
+        #print(chr(decoded_symbol))
 
         if len(a) > kappa:
             a.pop(-1)
@@ -218,26 +219,27 @@ def decode(y):
             value = 2*value + y[position]
             position += 1
             if position >= len(y):
-                return(cut(x))
+                return(x)
 
-            #------------------------------------------------------------------------------------
-            #UPDATE
-            #------------------------------------------------------------------------------------
-            x.append(a[0])
+        #------------------------------------------------------------------------------------
+        #UPDATE
+        #------------------------------------------------------------------------------------
+        x.append(decoded_symbol)
 
-            update_freq(a, frequencies)
+        update_freq(a, frequencies)
 
-            #debugging
-            if len(x) <= 10:
-                print(x[-1])
-                print(a)
-                print(frequencies)
-    return(x)
+        #debugging
+        # if len(x) <= 10:
+        #     print(x[-1])
+        #     print(a)
+        #     print(frequencies)
+
+    return("Compression Failed")
 
 def update_prob(frequencies, a):
     p = {}
     context = list(a)
-    context.reverse()
+    #context.reverse()
     for i in range(127):
         if tuple(a) in frequencies[kappa-1]:
             if i in frequencies[kappa-1][tuple(context)]:
@@ -276,14 +278,14 @@ def update_freq(a, frequencies):
         if (a[i] == ''):
             break
         elif i == 0:
-            frequencies[0][a[i]] = frequencies[0].setdefault(a[i], 0) + 1
+            frequencies[0][a[i]] = frequencies[0].setdefault(a[i], 0) + 1*scaling
         elif i == 1:            
             context = a[i]
             frequencies[i].setdefault(context, {})
             if a[0] not in frequencies[i][context]:
                 frequencies[i][context].setdefault(a[0],0)
                 frequencies[i][context]['escape'] = 1
-            frequencies[i][context][a[0]] += 1
+            frequencies[i][context][a[0]] += 1*scaling
         else:
             #print(a[1:i+1])
             context_list = a[1:i+1]
@@ -294,18 +296,8 @@ def update_freq(a, frequencies):
             if a[0] not in frequencies[i][context_tuple]:
                 frequencies[i][context_tuple].setdefault(a[0],0)
                 frequencies[i][context_tuple]['escape'] = 1
-            frequencies[i][context_tuple][a[0]] += 1
+            frequencies[i][context_tuple][a[0]] += 1*scaling
     return frequencies
-
-
-def cut(x):
-    output = []
-    for i in range(len(x)):
-        if i%7 == 0:
-            output.append(x[i])
-    return(output)
-
-
 
 if __name__ == "__main__":
     filename = 'hamlet.txt'

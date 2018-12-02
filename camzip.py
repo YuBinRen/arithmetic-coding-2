@@ -47,11 +47,13 @@ def camzip(method, filename):
     with open(outfile, 'wb') as fout:
         fout.write(y)
 
-    pfile = filename + '.czp'
-    n = len(x)
 
-    with open(pfile, 'w') as fp:
-        dump(frequencies, fp)
+    if method in ['huffman', 'shannon_fano', 'arithmetic']:
+        pfile = filename + '.czp'
+        n = len(x)
+
+        with open(pfile, 'w') as fp:
+            dump(frequencies, fp)
 
 
 if __name__ == "__main__":

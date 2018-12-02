@@ -3,7 +3,7 @@ from sys import stdout as so
 from bisect import bisect
 import itertools
 
-kappa = 5
+kappa = 3
 
 scaling = 128
 

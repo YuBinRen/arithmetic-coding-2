@@ -6,7 +6,7 @@ import os
 
 import time
 
-filename = "text.txt"
+filename = "hamlet.txt"
 
 #filename = "hamlet_extended.txt"
 

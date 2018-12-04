@@ -3,9 +3,11 @@ from sys import stdout as so
 from bisect import bisect
 import itertools
 
-kappa = 3
+kappa = 1
 
-scaling = 128
+print("Kappa =", kappa)
+
+scaling = 1
 
 
 def encode(x):
@@ -236,18 +238,29 @@ def decode(y):
 
     return("Compression Failed")
 
+
 def update_prob(frequencies, a):
     p = {}
     context = list(a)
-    #context.reverse()
     for i in range(127):
-        if tuple(a) in frequencies[kappa-1]:
-            if i in frequencies[kappa-1][tuple(context)]:
-                prob = frequencies[kappa-1][tuple(a)][i]/sum(frequencies[kappa-1][tuple(context)].values())
-            else:
-                prob = 1/sum(frequencies[kappa-1][tuple(context)].values())
+        prob = 1
+        if i in frequencies[0]:
+            prob = frequencies[0][i]/sum(frequencies[0].values()) 
+            for context_len in range(kappa):
+                context = a[1:context_len]
+                if tuple(context) in frequencies[context_len]:
+                    if i in frequencies[context_len][tuple(context)]:
+                        prob *= frequencies[context_len][tuple(context)][i]/sum(frequencies[context_len][tuple(context)].values())
+                    else:
+                        prob /= sum(frequencies[context_len][tuple(context)].values())
+                else:
+                    break              
         else:
-            prob = 1/128
+            prob = 1/sum(frequencies[0].values())
+
+
+
+
         p[i] = prob
     n = sum([p[a] for a in p])
     p = dict([(a,p[a]/n) for a in p])
